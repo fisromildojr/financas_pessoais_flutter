@@ -1,0 +1,20 @@
+GET http://localhost:8080/conta/all
+
+###
+
+POST http://localhost:8080/conta/save
+Content-Type: application/json
+
+{
+    "id": null,
+    "categoria": {
+        "id": 1
+    },
+    "tipo": true,
+    "data": "2023-09-26",
+    "descricao": "Dipirona",
+    "valor": 6.20,
+    "destinoOrigem": "Farmacia do Zé",
+    "status": false
+}
+
