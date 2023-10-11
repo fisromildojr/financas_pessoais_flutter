@@ -10,8 +10,10 @@ class Categoria extends AbstractEntity {
     required this.nome,
   });
 
+@override
   Map<String, dynamic> toMap() {
     return <String, dynamic>{
+      'id': id,
       'nome': nome,
     };
   }

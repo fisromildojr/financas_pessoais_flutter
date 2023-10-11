@@ -5,4 +5,5 @@ class BackRoutes {
 
   // Categoria
   static const CATEGORIA_ALL = '/categoria/all';
+  static const CATEGORIA_SAVE = '/categoria/save';
 }
