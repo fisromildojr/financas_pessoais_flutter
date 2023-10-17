@@ -7,6 +7,14 @@ Content-Type: application/json
 
 {
     "id": null,
-    "nome": "DENTISTA"
+    "nome": "CARTÃO"
 }
 
+###
+POST http://localhost:8080/categoria/findById
+Content-Type: application/json
+
+{
+    "id": 1,
+    "nome": "Romildo"
+}

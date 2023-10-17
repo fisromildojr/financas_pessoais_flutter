@@ -21,6 +21,6 @@ class Categoria extends AbstractEntity {
   factory Categoria.fromMap(Map<String, dynamic> map) {
     return Categoria(
       nome: map['nome'] as String,
-    );
+    )..id = map['id'] == null ? null : map['id'] as int;
   }
 }

@@ -14,9 +14,20 @@ class CategoriaController extends ChangeNotifier {
       final response = await categoriaRepository
           .getAll(BackRoutes.baseUrl + BackRoutes.CATEGORIA_ALL);
       if (response != null) {
+        // response as List<Map<String, dynamic>>;
+
+        // List<Categoria> categorias = [];
+
+        // response.forEach((map) {
+        //   var categoria = Categoria.fromMap(map);
+        //   categorias.add(categoria);
+        // });
+
         List<Categoria> lista =
             response.map<Categoria>((e) => Categoria.fromMap(e)).toList();
+
         categorias = lista;
+        
         return categorias;
       }
     } catch (e) {

@@ -6,4 +6,7 @@ class BackRoutes {
   // Categoria
   static const CATEGORIA_ALL = '/categoria/all';
   static const CATEGORIA_SAVE = '/categoria/save';
+  static const CATEGORIA_DELETE = '/categoria/delete';
+  static const CATEGORIA_UPDATE = '/categoria/update';
+  static const CATEGORIA_FIND_BY_ID = '/categoria/findById';
 }
