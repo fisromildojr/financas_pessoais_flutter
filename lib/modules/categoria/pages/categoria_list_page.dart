@@ -35,6 +35,25 @@ class CategoriaListPage extends StatelessWidget {
                   itemBuilder: (ctx, index) => Card(
                     child: ListTile(
                       title: Text(data[index].nome),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: ()=>controller.edit(context,data[index]), 
+                            icon: const Icon(
+                              Icons.edit,
+                              color: Colors.amber,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: ()=>controller.delete(data[index]), 
+                            icon: const Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );

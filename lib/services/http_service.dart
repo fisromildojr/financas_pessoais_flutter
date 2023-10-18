@@ -2,7 +2,7 @@ import 'package:financas_pessoais_flutter/modules/abstract/models/abstract_entit
 
 abstract class HttpService {
   Future<dynamic> getAll(String url);
-  Future<AbstractEntity?> save(String url, AbstractEntity entity);
-  Future<AbstractEntity?> update(String url, AbstractEntity entity);
-  Future<AbstractEntity?> delete(String url, AbstractEntity entity);
+  Future<dynamic> save(String url, AbstractEntity entity);
+  Future<dynamic> update(String url, AbstractEntity entity);
+  Future<dynamic> delete(String url, AbstractEntity entity);
 }
