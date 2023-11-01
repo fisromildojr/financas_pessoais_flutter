@@ -9,4 +9,11 @@ class BackRoutes {
   static const CATEGORIA_DELETE = '/categoria/delete';
   static const CATEGORIA_UPDATE = '/categoria/update';
   static const CATEGORIA_FIND_BY_ID = '/categoria/findById';
+
+  // Conta
+  static const CONTA_ALL = '/conta/all';
+  static const CONTA_SAVE = '/conta/save';
+  static const CONTA_DELETE = '/conta/delete';
+  static const CONTA_UPDATE = '/conta/update';
+  static const CONTA_FIND_BY_ID = '/conta/findById';
 }
