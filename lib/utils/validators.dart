@@ -1,4 +1,4 @@
-import 'package:fenix_front/utils/utils.dart';
+import 'package:financas_pessoais_flutter/utils/utils.dart';
 import 'package:flutter/material.dart';
 
 class Validators {
