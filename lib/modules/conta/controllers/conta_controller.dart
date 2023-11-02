@@ -1,12 +1,17 @@
 import 'dart:developer';
 
+import 'package:brasil_fields/brasil_fields.dart';
 import 'package:financas_pessoais_flutter/modules/categoria/controllers/categoria_controller.dart';
 import 'package:financas_pessoais_flutter/modules/categoria/models/categoria_model.dart';
 import 'package:financas_pessoais_flutter/modules/conta/models/conta_model.dart';
 import 'package:financas_pessoais_flutter/modules/conta/repository/conta_repository.dart';
 import 'package:financas_pessoais_flutter/utils/back_routes.dart';
+import 'package:financas_pessoais_flutter/utils/utils.dart';
+import 'package:financas_pessoais_flutter/utils/validators.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:validatorless/validatorless.dart';
 
 class ContaController extends ChangeNotifier {
   List<Conta> contas = [];
@@ -72,9 +77,7 @@ class ContaController extends ChangeNotifier {
 
   create(BuildContext context) async {
     final formKey = GlobalKey<FormState>();
-    final nomeController = TextEditingController();
-    // List<Categoria> categorias = await Provider.of<CategoriaController>(context, 
-    //             listen: false).findAll() ?? [];
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -84,65 +87,105 @@ class ContaController extends ChangeNotifier {
         ),
         content: Form(
           key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              
-              FutureBuilder<List<Categoria>?>(
-                future: Provider.of<CategoriaController>(context, 
-                listen: false).findAll(),
-                builder: (context, snapshot) {
-                  if(snapshot.connectionState == ConnectionState.done){
-                    var categorias = snapshot.data!;
-                  return DropdownButtonFormField(
-                    items: categorias.map((e) => 
-                    DropdownMenuItem<Categoria>(
-                        value: e,
-                        child: Text(e.nome),
-                      ),
-                    ).toList(),
-                    onChanged: (value) {
-                      categoriaSelecionada = value;
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'Categorias',
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                DropdownButtonFormField(
+                  items: const [
+                    DropdownMenuItem<String>(
+                      value: 'Despesa',
+                      child: Text('Despesa'),
                     ),
-                    validator: (value) {
-                      if(value == null){
-                        return 'Campo obrigatório';
-                      }
-                      return null;
-                    },
-                  );
+                    DropdownMenuItem<String>(
+                      value: 'Receita',
+                      child: Text('Receita'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    tipoSelecionado = value ?? 'Despesa';
+                    notifyListeners();
+                  },
+                  decoration: InputDecoration(
+                        hintText: 'Tipo',
+                      ),
+                  
+                  validator: (value) {
+                        if(value == null){
+                          return 'Campo obrigatório';
+                        }
+                        return null;
+                      },
+                ),
+                FutureBuilder<List<Categoria>?>(
+                  future: Provider.of<CategoriaController>(context, 
+                  listen: false).findAll(),
+                  builder: (context, snapshot) {
+                    if(snapshot.connectionState == ConnectionState.done){
+                      var categorias = snapshot.data ?? [];
+
+                    return DropdownButtonFormField(
+                      items: categorias.map((e) => 
+                      DropdownMenuItem<Categoria>(
+                          value: e,
+                          child: Text(e.nome),
+                        ),
+                      ).toList(),
+                      onChanged: (value) {
+                        categoriaSelecionada = value;
+                      },
+                      decoration: InputDecoration(
+                        hintText: 'Categorias',
+                      ),
+                      validator: (value) {
+                        if(value == null){
+                          return 'Campo obrigatório';
+                        }
+                        return null;
+                      },
+                    );
+                    }
+                    return const CircularProgressIndicator();
                   }
-                  return const CircularProgressIndicator();
-                }
-              ),
-              DropdownButtonFormField(
-                items: const [
-                  DropdownMenuItem<String>(
-                    value: 'Despesa',
-                    child: Text('Despesa'),
-                  ),
-                  DropdownMenuItem<String>(
-                    value: 'Receita',
-                    child: Text('Receita'),
-                  ),
-                ],
-                onChanged: (value) {
-                  tipoSelecionado = value ?? 'Despesa';
-                },
+                ),
+                TextFormField(
+                  controller: dataController,
+                  decoration: InputDecoration(labelText: Provider.of<ContaController>(context).tipoSelecionado == 'Despesa' ? 'Data de Pagamento' : 'Data de Recebimento'),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    DataInputFormatter(),
+                  ],
+                ),
+                TextFormField(
+                  controller: descricaoController,
+                  decoration: InputDecoration(labelText: 'Descrição'),
+                ),
+                TextFormField(
+                  controller: destinoOrigemController,
+                  decoration: InputDecoration(labelText: Provider.of<ContaController>(context).tipoSelecionado == 'Despesa' ? 'Destino' : 'Origem'),
+                ),
+                TextFormField(
+                  controller: valorController,
+                  decoration: InputDecoration(labelText: 'Valor'),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    CentavosInputFormatter(moeda: true),
+                  ],
+                  validator: Validatorless.multiple([
+                    Validatorless.required('Campo obrigatório'),
+                    Validators.minDouble(0.01, 'Valor inválido'),
+                  ]),
+                  // validator: (value) {
+                  //   if(value == null || value.isEmpty){
+                  //     return "Campo obrigatório";
+                  //   }
+                  //   return null;
+                  // },
+                ),
                 
-                validator: (value) {
-                      if(value == null){
-                        return 'Campo obrigatório';
-                      }
-                      return null;
-                    },
-              ),
-              
-              
-            ],
+                
+              ],
+            ),
           ),
         ),
         actions: [
@@ -152,9 +195,9 @@ class ContaController extends ChangeNotifier {
                 var conta = Conta(
                   categoria: categoriaSelecionada!, 
                   tipo: tipoSelecionado == 'Despesa' ? true : false, 
-                  data: dataController.text,
+                  data: Utils.convertDate(dataController.text),
                   descricao: descricaoController.text, 
-                  valor: double.parse(valorController.text), 
+                  valor: UtilBrasilFields.converterMoedaParaDouble(valorController.text), 
                   destinoOrigem: destinoOrigemController.text, 
                   status: false,
                 );

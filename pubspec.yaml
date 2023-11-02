@@ -38,6 +38,9 @@ dependencies:
   http: ^1.1.0
   dio: ^5.3.3
   provider: ^6.0.5
+  brasil_fields: ^1.14.0
+  intl: ^0.18.1
+  validatorless: ^1.2.3
 
 dev_dependencies:
   flutter_test:
