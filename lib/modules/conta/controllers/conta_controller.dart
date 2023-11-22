@@ -10,6 +10,7 @@ import 'package:financas_pessoais_flutter/utils/utils.dart';
 import 'package:financas_pessoais_flutter/utils/validators.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:validatorless/validatorless.dart';
 
@@ -56,6 +57,20 @@ class ContaController extends ChangeNotifier {
       }
     } catch (e) {
       log(e.toString());
+    }
+  }
+
+  Future<void> selecionarData(BuildContext context) async {
+    final DateTime? dataSelecionada = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(
+        Duration(days: 100),
+      ),
+    );
+    if (dataSelecionada != null) {
+      dataController.text = DateFormat('dd/MM/yyyy').format(dataSelecionada);
     }
   }
 
@@ -118,8 +133,7 @@ class ContaController extends ChangeNotifier {
                       },
                 ),
                 FutureBuilder<List<Categoria>?>(
-                  future: Provider.of<CategoriaController>(context, 
-                  listen: false).findAll(),
+                  future: context.read<CategoriaController>().findAll(),
                   builder: (context, snapshot) {
                     if(snapshot.connectionState == ConnectionState.done){
                       var categorias = snapshot.data ?? [];
@@ -149,6 +163,8 @@ class ContaController extends ChangeNotifier {
                   }
                 ),
                 TextFormField(
+                  onTap: () => selecionarData(context),
+                  readOnly: true,
                   controller: dataController,
                   decoration: InputDecoration(labelText: Provider.of<ContaController>(context).tipoSelecionado == 'Despesa' ? 'Data de Pagamento' : 'Data de Recebimento'),
                   inputFormatters: [
