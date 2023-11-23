@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       theme: MyTheme.lightTheme,
       darkTheme: MyTheme.darkTheme,
       themeMode: ThemeMode.system,
-      home: ContaListPage(),
+      home: CategoriaListPage(),
     );
   }
 }

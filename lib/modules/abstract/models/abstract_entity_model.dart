@@ -1,3 +1,5 @@
+import 'package:objectbox/objectbox.dart';
+
 abstract class AbstractEntity {
   int? id;
   String? createdAt;

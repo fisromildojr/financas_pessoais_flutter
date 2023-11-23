@@ -1,6 +1,16 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:developer';
 
 import 'package:brasil_fields/brasil_fields.dart';
+import 'package:financas_pessoais_flutter/database/objectbox.g.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:objectbox/objectbox.dart';
+import 'package:provider/provider.dart';
+import 'package:validatorless/validatorless.dart';
+
+import 'package:financas_pessoais_flutter/database/objectbox_database.dart';
 import 'package:financas_pessoais_flutter/modules/categoria/controllers/categoria_controller.dart';
 import 'package:financas_pessoais_flutter/modules/categoria/models/categoria_model.dart';
 import 'package:financas_pessoais_flutter/modules/conta/models/conta_model.dart';
@@ -8,11 +18,6 @@ import 'package:financas_pessoais_flutter/modules/conta/repository/conta_reposit
 import 'package:financas_pessoais_flutter/utils/back_routes.dart';
 import 'package:financas_pessoais_flutter/utils/utils.dart';
 import 'package:financas_pessoais_flutter/utils/validators.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import 'package:validatorless/validatorless.dart';
 
 class ContaController extends ChangeNotifier {
   List<Conta> contas = [];
@@ -24,37 +29,68 @@ class ContaController extends ChangeNotifier {
   final valorController = TextEditingController();
   final destinoOrigemController = TextEditingController();
   
+  Future<Box<Conta>> getBox() async {
+    final store = 
+      await ObjectBoxDatabase.getStore();
+    
+    return store.box<Conta>();
+  }
+  
   Future<List<Conta>?> findAll() async {
-    var contaRepository = ContaRepository();
     try {
-      final response = await contaRepository
-          .getAll(BackRoutes.baseUrl + BackRoutes.CONTA_ALL);
-      if (response != null) {
-
-        List<Conta> lista =
-            response.map<Conta>((e) => Conta.fromMap(e)).toList();
-
-        contas = lista;
+        final box = await getBox();
+        contas = box.getAll();
 
         return contas;
-        
-      }
     } catch (e) {
       log(e.toString());
     }
-    return null;
+  }
+
+  Future<ResumoDTO?> resumo() async {
+    final box = await getBox();
+
+    final queryDespesa = box.query(
+      Conta_.tipo.equals(true))
+        .order(Conta_.id).build();
+
+    final queryReceita = box.query(
+      Conta_.tipo.equals(false))
+        .order(Conta_.id).build();
+
+    final contasDespesas = queryDespesa.find();
+    final contasReceitas = queryReceita.find();
+    
+    queryDespesa.close();
+    queryReceita.close();
+
+    double totalDespesa = 0.0;
+    double totalReceita = 0.0;
+    double saldo = 0.0;
+
+    contasDespesas.forEach((element) {
+      totalDespesa += element.valor ?? 0.0;
+    });
+
+    contasReceitas.forEach((element) {
+      totalReceita += element.valor ?? 0.0;
+    });
+
+    saldo = totalReceita - totalDespesa;
+
+    return ResumoDTO(
+      totalReceita: totalReceita, 
+      totalDespesa: totalDespesa, 
+      saldo: saldo,
+    );
+
   }
 
   Future<void> save(Conta conta) async {
-    var contaRepository = ContaRepository();
     try {
-      final response = await contaRepository.save(
-          BackRoutes.baseUrl + BackRoutes.CONTA_SAVE, conta);
-      if (response != null) {
-        Conta conta =
-            Conta.fromMap(response as Map<String, dynamic>);
+        final box = await getBox();
+        box.put(conta);
         contas.add(conta);
-      }
     } catch (e) {
       log(e.toString());
     }
@@ -75,16 +111,10 @@ class ContaController extends ChangeNotifier {
   }
 
   Future<void> update(Conta conta) async {
-    var contaRepository = ContaRepository();
     try {
-      final response = await contaRepository.update(
-          BackRoutes.baseUrl + BackRoutes.CONTA_UPDATE, conta);
-      if (response != null) {
-        Conta contaEdit =
-            Conta.fromMap(response as Map<String, dynamic>);
-        contas.add(contaEdit);
-        contas.remove(conta);
-      }
+        final box = await getBox();
+        box.put(conta);
+        contas.add(conta);
     } catch (e) {
       log(e.toString());
     }
@@ -142,7 +172,7 @@ class ContaController extends ChangeNotifier {
                       items: categorias.map((e) => 
                       DropdownMenuItem<Categoria>(
                           value: e,
-                          child: Text(e.nome),
+                          child: Text(e.nome ?? '-'),
                         ),
                       ).toList(),
                       onChanged: (value) {
@@ -208,8 +238,7 @@ class ContaController extends ChangeNotifier {
           ElevatedButton.icon(
             onPressed: () async {
               if (formKey.currentState?.validate() ?? false) {
-                var conta = Conta(
-                  categoria: categoriaSelecionada!, 
+                var conta = Conta( 
                   tipo: tipoSelecionado == 'Despesa' ? true : false, 
                   data: Utils.convertDate(dataController.text),
                   descricao: descricaoController.text, 
@@ -217,6 +246,7 @@ class ContaController extends ChangeNotifier {
                   destinoOrigem: destinoOrigemController.text, 
                   status: false,
                 );
+                conta.categoria.target = categoriaSelecionada!;
                 await save(conta);
                 notifyListeners();
                 Navigator.of(context).pop();
@@ -276,16 +306,23 @@ class ContaController extends ChangeNotifier {
   }
 
   delete(Conta data)async {
-    var contaRepository = ContaRepository();
     try {
-      final response = await contaRepository.delete(
-          BackRoutes.baseUrl + BackRoutes.CONTA_DELETE, data);
-      if (response != null) {
-        contas.remove(data);
-        notifyListeners();
-      }
+      final box = await getBox();
+      box.remove(data.id!);
+      contas.remove(data);
     } catch (e) {
       log(e.toString());
     }
   }
+}
+
+class ResumoDTO {
+  double totalReceita;
+  double totalDespesa;
+  double saldo;
+  ResumoDTO({
+    required this.totalReceita,
+    required this.totalDespesa,
+    required this.saldo,
+  });
 }
